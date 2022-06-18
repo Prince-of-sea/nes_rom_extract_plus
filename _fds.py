@@ -1,22 +1,59 @@
 
 
-def QD2FDS_py(d, i):
+def QD2FDS_py(d):
 	#ここに 変換前バイナリ(.qd)→変換後バイナリ(.fds - 64KBヘッダなし)を書く
 
 
+	#! 参考元
+	#! http://www.neko.ne.jp/~freewing/hardware/nintendo_format_converter_qd_to_fds/
+	with open(d, 'rb') as f:
+		rbuff = f.read()
+		wbuff = bytes(65500 * 2)
 
-	#---------------------------以下テスト用----------------------------
-	Program = r'Program.exe'
-	
-	with open('__disk'+str(i)+'.qd', 'wb') as f:
-		f.write(d)
+		rpos = 0
+		wpos = 0
+		fcnt = 0
+		cpsize = 0
+		size04 = 0
+		while (rpos < len(rbuff)):
+			rb = bytes([rbuff[rpos]])
 
-	subprocess.run([Program, '__disk'+str(i)+'.qd'], shell=True)
+			if (rb == b"\x01"):
+				cpsize = b"\x38"
+			elif (rb == b"\x02"):
+				cpsize = b"\x02"
+				fcnt = rbuff[rpos + 1]
+			elif (rb == b"\x03"):
+				cpsize = b"\x10"
+				size04 = (rbuff[rpos + 14] << 8) + rbuff[rpos + 13]
+			elif (rb == b"\x04"):
+				cpsize = size04 + 1
+				if (fcnt > 0):
+					fcnt -= 1
+				else:
+					exit(1)
+			elif (rb == b"\x00"):
+				if (fcnt == 0):
+					cpsize = b"0x10000" - (rpos & 0xffff)
+				else:
+					exit(1)
 
-	with open('__disk'+str(i)+'.fds', 'rb') as f:
-		c = f.read()
-	
-	return c[0:65536-36]#64KBじゃない場合の保険 - キレイにできてれば[0:65536-36]は消していい
+
+			while (cpsize > b"\x00") and (wpos < len(wbuff)):
+				wpos += 1
+				rpos += 1
+				try:
+					wbuff[wpos] = rbuff[rpos]
+				except:
+					pass
+			
+			if (rb == b"\x00"):
+				if (wpos < b"0x10000"):
+					wpos = b"0xFFDC"
+			else:
+				rpos += 2
+
+	return wbuff[0:65500]
 
 
 def convert(p, l):
@@ -33,7 +70,7 @@ def convert(p, l):
 		if not (d[0:16] == target):
 			break
 
-		rom += QD2FDS_py(d, i)
+		rom += QD2FDS_py(d)
 		i += 1
 
 	if i == 1:
@@ -45,15 +82,3 @@ def convert(p, l):
 
 	rom = fds + rom
 	return rom
-
-
-#---------------------------以下もテスト用----------------------------
-if __name__ == "__main__":
-	import subprocess
-
-	input = r"main.dol"
-	output = r"x.fds"
-	args = []
-
-	with open(output, 'wb') as f:
-		f.write(convert(input, args))
