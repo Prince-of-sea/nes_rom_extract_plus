@@ -51,7 +51,7 @@ def convert(p, l):
 if __name__ == "__main__":
 	import subprocess
 
-	input = r"WUP-FA8J.bin"
+	input = r"main.dol"
 	output = r"x.fds"
 	args = []
 
