@@ -3,6 +3,7 @@ import sys
 import os
 
 import _nes
+import _fds
 
 
 def Error_mode(msg):
@@ -26,8 +27,8 @@ if not os.path.exists(input):
 with open(output, 'wb') as f:
 	if output_ext == '.nes':
 		f.write(_nes.convert(input, args))
-	#elif output_ext == '.fds':
-		#f.write(_fds.convert(input, args))
+	elif output_ext == '.fds':
+		f.write(_fds.convert(input, args))
 	#elif output_ext == '.snes':
 		#f.write(_snes.convert(input, args))
 	else:
