@@ -1,60 +1,36 @@
+#!/usr/bin/env python3
+import struct
 
-
-def QD2FDS_py(d):
+def QD2FDS_py(disk):
 	#ここに 変換前バイナリ(.qd)→変換後バイナリ(.fds - 64KBヘッダなし)を書く
+	# 参考元 - https://gist.github.com/einstein95/6545066905680466cdf200c4cc8ca4f0
 
+	disk = bytearray(disk)
+	del disk[0x38:0x3A]  # 01 block chksum
 
-	#! 参考元
-	#! http://www.neko.ne.jp/~freewing/hardware/nintendo_format_converter_qd_to_fds/
-	with open(d, 'rb') as f:
-		rbuff = f.read()
-		wbuff = bytes(65500 * 2)
-		wbuff = list(wbuff)
+	# fn = disk[0x39]  # get num of files from 02 block
+	pos = 0x3A
 
-		rpos = 0
-		wpos = 0
-		fcnt = 0
-		cpsize = 0
-		size04 = 0
-		while (rpos < len(rbuff)):
-			rb = bytes([rbuff[rpos]])
+	del disk[pos: pos + 2]  # 02 block chksum
 
-			if (rb == b"\x01"):
-				cpsize = b"\x38"
-			elif (rb == b"\x02"):
-				cpsize = b"\x02"
-				fcnt = rbuff[rpos + 1]
-			elif (rb == b"\x03"):
-				cpsize = b"\x10"
-				size04 = (rbuff[rpos + 14] << 8) + rbuff[rpos + 13]
-			elif (rb == b"\x04"):
-				cpsize = size04 + 1
-				if (fcnt > 0):
-					fcnt -= 1
-				else:
-					exit(1)
-			elif (rb == b"\x00"):
-				if (fcnt == 0):
-					cpsize = b"0x10000" - (rpos & 0xffff)
-				else:
-					exit(1)
+	try:
+		while disk[pos] == 3:  # if there's any more files, like in Doki Doki Panic
+			filesize, = struct.unpack('<H', disk[pos + 0xD: pos + 0xF])
 
+			del disk[pos + 0x10: pos + 0x12]  # 03 block chksum
 
-			while (cpsize > b"\x00") and (wpos < len(wbuff)):
-				wpos += 1
-				rpos += 1
-				try:
-					wbuff[wpos] = rbuff[rpos]
-				except:
-					pass
-			
-			if (rb == b"\x00"):
-				if (wpos < b"0x10000"):
-					wpos = b"0xFFDC"
-			else:
-				rpos += 2
+			pos = pos + 0x10 + 1 + filesize
 
-	return bytes(wbuff)[0:65500]
+			del disk[pos: pos + 2]  # 04 block chksum
+
+	except IndexError:
+		pass
+
+	if len(disk) > 65500:
+		disk = disk[:65500]
+	else:
+		disk = disk.ljust(65500, b"\0")
+	return disk
 
 
 def convert(p, l):
