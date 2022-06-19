@@ -1,22 +1,36 @@
+#!/usr/bin/env python3
+import struct
 
-
-def QD2FDS_py(d, i):
+def QD2FDS_py(disk):
 	#ここに 変換前バイナリ(.qd)→変換後バイナリ(.fds - 64KBヘッダなし)を書く
+	# 参考元 - https://gist.github.com/einstein95/6545066905680466cdf200c4cc8ca4f0
 
+	disk = bytearray(disk)
+	del disk[0x38:0x3A]  # 01 block chksum
 
+	# fn = disk[0x39]  # get num of files from 02 block
+	pos = 0x3A
 
-	#---------------------------以下テスト用----------------------------
-	Program = r'Program.exe'
-	
-	with open('__disk'+str(i)+'.qd', 'wb') as f:
-		f.write(d)
+	del disk[pos: pos + 2]  # 02 block chksum
 
-	subprocess.run([Program, '__disk'+str(i)+'.qd'], shell=True)
+	try:
+		while disk[pos] == 3:  # if there's any more files, like in Doki Doki Panic
+			filesize, = struct.unpack('<H', disk[pos + 0xD: pos + 0xF])
 
-	with open('__disk'+str(i)+'.fds', 'rb') as f:
-		c = f.read()
-	
-	return c[0:65536-36]#64KBじゃない場合の保険 - キレイにできてれば[0:65536-36]は消していい
+			del disk[pos + 0x10: pos + 0x12]  # 03 block chksum
+
+			pos = pos + 0x10 + 1 + filesize
+
+			del disk[pos: pos + 2]  # 04 block chksum
+
+	except IndexError:
+		pass
+
+	if len(disk) > 65500:
+		disk = disk[:65500]
+	else:
+		disk = disk.ljust(65500, b"\0")
+	return disk
 
 
 def convert(p, l):
@@ -45,15 +59,3 @@ def convert(p, l):
 
 	rom = fds + rom
 	return rom
-
-
-#---------------------------以下もテスト用----------------------------
-if __name__ == "__main__":
-	import subprocess
-
-	input = r"main.dol"
-	output = r"x.fds"
-	args = []
-
-	with open(output, 'wb') as f:
-		f.write(convert(input, args))
