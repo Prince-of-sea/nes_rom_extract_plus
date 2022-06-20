@@ -2,7 +2,7 @@
 
 ## Overview
   [nes_rom_extract](https://github.com/Plombo/romextract/blob/master/src/nes_rom_extract.py)の非公式機能追加版もどきです<br>
-  fdsへの変換/抽出機能もついています(v0.2.0~)<br>
+  fds変換(v0.2.0~)、bios抽出(v0.3.0~)機能もついています<br>
   本家および本家の作者とは一切関係ありません<br>
   <br>
   現時点で以下のデータに対応している**はず**(詳細未確認)<br>
@@ -36,6 +36,11 @@ nes_rom_extract_plus.exe [options] input.dol output.nes
 ```
 nes_rom_extract_plus.exe input.dol output.fds
 ```
+ - fds bios抽出時 - CRC:5E607DCF (おそらくfc/fds系.dol専用)
+```
+nes_rom_extract_plus.exe input.dol output.rom
+```
+
 ### Options
 
  - [ -r ]Legacy mode(.nes only)<br>
