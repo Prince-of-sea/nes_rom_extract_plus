@@ -18,12 +18,14 @@ def convert(p, l):
 	target = b'*CVH-ODNETNIN*'
 	idx = s.find(target)
 	rom_head = ( idx - int('6D5', 16) )
+	rom_tmp = s[rom_head:rom_head+8192]
 
-	rom = s[rom_head:rom_head+8192]
-	result = b''
+	if ('-nf' in l):
+		rom = rom_tmp
+	else:
+		rom = b''
+		for i, b in enumerate(rom_tmp):
+			getbin = d.get(hex(i).lower())
+			rom += getbin if bool(getbin) else bytes([b])
 
-	for i, b in enumerate(rom):
-		getbin = ( d.get(hex(i).lower()) )
-		result += getbin if bool(getbin) else bytes([b])
-
-	return result
+	return rom

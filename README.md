@@ -25,6 +25,7 @@
 ```
 pyinstaller --onefile nes_rom_extract_plus.py
 ```
+[＞＞ビルド済みファイルはこちら](https://github.com/Prince-of-sea/nes_rom_extract_plus/releases/latest)
 
 
 ## Usage
@@ -34,18 +35,23 @@ nes_rom_extract_plus.exe [options] input.dol output.nes
 ```
  - fdsファイル抽出時
 ```
-nes_rom_extract_plus.exe input.dol output.fds
+nes_rom_extract_plus.exe [options] input.dol output.fds
 ```
- - fds bios抽出時 - CRC:5E607DCF (おそらくfc/fds系.dol専用)
+ - fds bios抽出時 - CRC:5E607DCF
 ```
-nes_rom_extract_plus.exe input.dol output.rom
+nes_rom_extract_plus.exe [options] input.dol output.rom
 ```
 
 ### Options
-
- - [ -r ]Legacy mode(.nes only)<br>
+ - [ -l ]Legacy mode(.nes only)<br>
    原作の[nes_rom_extract](https://github.com/Plombo/romextract/blob/master/src/nes_rom_extract.py)と同じように、ROMデータ以下の不要部分の削除を行わなくなります<br>
    通常変換でエラーが起きた際に、この引数を使うと正常に変換できる可能性があります<br>
+ - [ -nh ]No Header(.fds only)<br>
+   出力するROMにヘッダを付加しなくなります<br>
+   エミュレータで利用できなくなる可能性があります<br>
+ - [ -nf ]No Fix(.nes / FDS BIOS)<br>
+   抽出したBIOSに対して特定箇所のバイナリ修正を行わなくなります<br>
+   CRCが一致しなくなり、エミュレータで利用できなくなる可能性があります<br>
 
 
 ## License

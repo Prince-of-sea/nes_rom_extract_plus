@@ -34,28 +34,27 @@ def QD2FDS_py(disk):
 
 
 def convert(p, l):
-	target = b'\x01\x2A\x4E\x49\x4E\x54\x45\x4E\x44\x4F\x2D\x48\x56\x43\x2A\x01'# " *NINTENDO-HVC* "
-	rom = b''
+	target = b'*NINTENDO-HVC*'
+	rom_tmp = b''
 	i = 0
 
 	with open(p, 'rb') as f:
 		s = f.read()
 	idx = s.find(target)
+	rom_head = (idx - 1)
 
 	while(True):
-		d = s[idx+(64*1024*i):idx+(64*1024*(i+1))]
-		if not (d[0:16] == target):
+		d = s[rom_head+(65536*i):rom_head+(65536*(i+1))]
+		if not (d[1:15] == target):
 			break
 
-		rom += QD2FDS_py(d)
+		rom_tmp += QD2FDS_py(d)
 		i += 1
 
-	if i == 1:
-		fds = b'\x46\x44\x53\x1A\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'# Disk1枚組
-	elif i == 2:
-		fds = b'\x46\x44\x53\x1A\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'# Disk2枚組
-	elif i == 4:
-		fds = b'\x46\x44\x53\x1A\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'# Disk2x2枚組
+	if ('-nh' in l):
+		rom = rom_tmp
+	else:
+		fds = b'\x46\x44\x53\x1A' + int(hex(i), 16).to_bytes(12, byteorder='little')# Disk枚数→16進
+		rom = fds + rom_tmp
 
-	rom = fds + rom
 	return rom

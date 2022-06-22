@@ -32,7 +32,7 @@ with open(output, 'wb') as f:
 		f.write(_fds.convert(input, args))
 	elif output_ext == '.rom':
 		f.write(_bios.convert(input, args))
-	#elif output_ext == '.snes':
+	#elif output_ext == '.smc':
 		#f.write(_snes.convert(input, args))
 	else:
 		Error_mode('出力時の拡張子が非対応です。')
